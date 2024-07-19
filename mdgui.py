@@ -28,6 +28,7 @@ def add_subsection():
     text_area.insert(tk.INSERT, '### ')
     update_preview()
 
+# adding a figure
 def add_figure():
     figure_name = simpledialog.askstring("Input", "Enter the name of the file:")
     if figure_name:
@@ -48,6 +49,7 @@ name: {fig_name}
     text_area.insert(tk.INSERT, figure_markdown)
     update_preview()
 
+# including bold text
 def add_bold():
     try:
         start_idx = text_area.index(tk.SEL_FIRST)
@@ -65,6 +67,28 @@ def add_bold():
         cursor_idx = text_area.index(tk.INSERT)
         text_area.insert(cursor_idx, "**")
         text_area.insert(cursor_idx + "+2c", "**")
+        text_area.mark_set(tk.INSERT, cursor_idx + "+2c")
+
+    update_preview()
+
+# including italics
+def add_italics():
+    try:
+        start_idx = text_area.index(tk.SEL_FIRST)
+        end_idx = text_area.index(tk.SEL_LAST)
+    except tk.TclError:
+        start_idx = None
+        end_idx = None
+
+    if start_idx and end_idx:
+        selected_text = text_area.get(start_idx, end_idx)
+        text_area.delete(start_idx, end_idx)
+        text_area.insert(start_idx, f"*{selected_text}*")
+        text_area.tag_remove(tk.SEL, "1.0", tk.END)
+    else:
+        cursor_idx = text_area.index(tk.INSERT)
+        text_area.insert(cursor_idx, "*")
+        text_area.insert(cursor_idx + "+2c", "*")
         text_area.mark_set(tk.INSERT, cursor_idx + "+2c")
 
     update_preview()
@@ -97,6 +121,9 @@ def main():
         figure_button.pack(pady=10)
 
         bold_button = tk.Button(button_frame, text="Bold", command=add_bold)
+        bold_button.pack(pady=10)
+        
+        bold_button = tk.Button(button_frame, text="Italics", command=add_italics)
         bold_button.pack(pady=10)
 
         # Text Area
