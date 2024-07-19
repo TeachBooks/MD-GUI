@@ -7,7 +7,7 @@ from tkinter import scrolledtext, simpledialog
 import markdown
 from tkhtmlview import HTMLLabel
 
-
+# update preview of markdown output
 def update_preview(event=None):
     try:
         md_text = text_area.get("1.0", tk.END)
@@ -16,15 +16,19 @@ def update_preview(event=None):
     except Exception as e:
         print(f"Error in update_preview: {e}")
 
-# buttons left side
+# added functionalities
+
+# adding a chapter
 def add_chapter():
     text_area.insert(tk.INSERT, '# ')
     update_preview()
 
+# adding a section
 def add_section():
     text_area.insert(tk.INSERT, '## ')
     update_preview()
 
+# adding a subsection
 def add_subsection():
     text_area.insert(tk.INSERT, '### ')
     update_preview()
@@ -36,14 +40,14 @@ def add_figure():
         width = simpledialog.askstring("Input", "Enter the width percentage:")
         alignment = simpledialog.askstring("Input", "Enter the alignment (left, center, right):")
         caption = simpledialog.askstring("Input", "Enter the caption:")
-        fig_name = simpledialog.askstring("Input", "Enter the figure name:")
+        fig_label = simpledialog.askstring("Input", "Enter the namelabel:")
         
         figure_markdown = f"""
 ```{{figure}} {figure_name}
 ---
 width: {width}%
 alignment: {alignment}
-name: {fig_name}
+name: {fig_label}
 ---
 {caption}
 ```"""
@@ -94,7 +98,7 @@ def add_italics():
 
     update_preview()
 
-# Including equation
+# Including an equation
 def add_equation():
     try:
         start_idx = text_area.index(tk.SEL_FIRST)
@@ -116,6 +120,31 @@ def add_equation():
 
     update_preview()
 
+# add youtube video
+def add_youtube():
+    YTurl = simpledialog.askstring("Input", "Enter the EMBED YouTube URL:")
+    if YTurl:
+        YT_markdown = f"""
+\n
+<div style="display: flex; justify-content: center;">
+    <div style="position: relative; width: 70%; height: 0; padding-bottom: 56.25%;">
+        <iframe
+            src="{YTurl}"  
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+        ></iframe>
+    </div>
+</div>
+\n
+"""
+    text_area.insert(tk.INSERT, YT_markdown)
+    update_preview()
+
+
+# ---------------------------- #
+# main function
 
 def main():
     global text_area, html_label
@@ -130,28 +159,32 @@ def main():
         button_frame = tk.Frame(frame)
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
 
+        button_width = 20
+
         # Buttons
-        chapter_button = tk.Button(button_frame, text="Chapter", command=add_chapter)
+        chapter_button = tk.Button(button_frame, text="Chapter", command=add_chapter, width=button_width)
         chapter_button.pack(pady=10)
 
-        section_button = tk.Button(button_frame, text="Section", command=add_section)
+        section_button = tk.Button(button_frame, text="Section", command=add_section, width=button_width)
         section_button.pack(pady=10)
 
-        subsection_button = tk.Button(button_frame, text="Subsection", command=add_subsection)
+        subsection_button = tk.Button(button_frame, text="Subsection", command=add_subsection, width=button_width)
         subsection_button.pack(pady=10)
 
-        figure_button = tk.Button(button_frame, text="Figure", command=add_figure)
+        figure_button = tk.Button(button_frame, text="Figure", command=add_figure, width=button_width)
         figure_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Bold", command=add_bold)
+        bold_button = tk.Button(button_frame, text="Bold", command=add_bold, width=button_width)
         bold_button.pack(pady=10)
         
-        bold_button = tk.Button(button_frame, text="Italics", command=add_italics)
+        bold_button = tk.Button(button_frame, text="Italics", command=add_italics, width=button_width)
         bold_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Equation", command=add_equation)
+        bold_button = tk.Button(button_frame, text="Equation", command=add_equation, width=button_width)
         bold_button.pack(pady=10)
 
+        bold_button = tk.Button(button_frame, text="YTvideo", command=add_youtube, width=button_width)
+        bold_button.pack(pady=10)
 
         # Text Area
 
@@ -160,8 +193,8 @@ def main():
         text_area.bind("<KeyRelease>", update_preview)
 
         # HTML Label
-
-        html_label = HTMLLabel(frame, html="<p>Type Markdown to see preview</p>")
+        
+        html_label = HTMLLabel(frame, html="<p>This applet is made by <a href='http://teachbooks.tudelft.nl'>teachbooks</a></p>")
         html_label.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         app.mainloop()
