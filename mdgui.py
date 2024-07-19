@@ -48,6 +48,27 @@ name: {fig_name}
     text_area.insert(tk.INSERT, figure_markdown)
     update_preview()
 
+def add_bold():
+    try:
+        start_idx = text_area.index(tk.SEL_FIRST)
+        end_idx = text_area.index(tk.SEL_LAST)
+    except tk.TclError:
+        start_idx = None
+        end_idx = None
+
+    if start_idx and end_idx:
+        selected_text = text_area.get(start_idx, end_idx)
+        text_area.delete(start_idx, end_idx)
+        text_area.insert(start_idx, f"**{selected_text}**")
+        text_area.tag_remove(tk.SEL, "1.0", tk.END)
+    else:
+        cursor_idx = text_area.index(tk.INSERT)
+        text_area.insert(cursor_idx, "**")
+        text_area.insert(cursor_idx + "+2c", "**")
+        text_area.mark_set(tk.INSERT, cursor_idx + "+2c")
+
+    update_preview()
+
 
 def main():
     global text_area, html_label
@@ -75,9 +96,16 @@ def main():
         figure_button = tk.Button(button_frame, text="Figure", command=add_figure)
         figure_button.pack(pady=10)
 
+        bold_button = tk.Button(button_frame, text="Bold", command=add_bold)
+        bold_button.pack(pady=10)
+
+        # Text Area
+
         text_area = scrolledtext.ScrolledText(frame, wrap=tk.WORD, width=50)
         text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         text_area.bind("<KeyRelease>", update_preview)
+
+        # HTML Label
 
         html_label = HTMLLabel(frame, html="<p>Type Markdown to see preview</p>")
         html_label.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
