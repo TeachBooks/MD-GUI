@@ -7,6 +7,7 @@ from tkinter import scrolledtext, simpledialog
 import markdown
 from tkhtmlview import HTMLLabel
 
+
 def update_preview(event=None):
     try:
         md_text = text_area.get("1.0", tk.END)
@@ -93,6 +94,28 @@ def add_italics():
 
     update_preview()
 
+# Including equation
+def add_equation():
+    try:
+        start_idx = text_area.index(tk.SEL_FIRST)
+        end_idx = text_area.index(tk.SEL_LAST)
+    except tk.TclError:
+        start_idx = None
+        end_idx = None
+
+    if start_idx and end_idx:
+        selected_text = text_area.get(start_idx, end_idx)
+        text_area.delete(start_idx, end_idx)
+        text_area.insert(start_idx, f"\n $${selected_text}$$ \n ")
+        text_area.tag_remove(tk.SEL, "1.0", tk.END)
+    else:
+        cursor_idx = text_area.index(tk.INSERT)
+        text_area.insert(cursor_idx, "\n$$")
+        text_area.insert(cursor_idx + "+3c", "$$\n")
+        text_area.mark_set(tk.INSERT, cursor_idx + "+3c")
+
+    update_preview()
+
 
 def main():
     global text_area, html_label
@@ -125,6 +148,10 @@ def main():
         
         bold_button = tk.Button(button_frame, text="Italics", command=add_italics)
         bold_button.pack(pady=10)
+
+        bold_button = tk.Button(button_frame, text="Equation", command=add_equation)
+        bold_button.pack(pady=10)
+
 
         # Text Area
 
