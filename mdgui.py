@@ -6,6 +6,17 @@ import tkinter as tk
 from tkinter import scrolledtext, simpledialog, filedialog
 import markdown
 from tkhtmlview import HTMLLabel
+import random
+import string
+
+# ---------------------------- #
+# quit the app
+#def quit_app(event=None):
+#    app.quit()
+
+# labelmaker
+def label_maker():
+    return ''.join(random.choices(string.ascii_uppercase, k=4))
 
 # update preview of markdown output
 def update_preview(event=None):
@@ -21,7 +32,9 @@ def update_preview(event=None):
 
 # adding a chapter
 def add_chapter():
-    text_area.insert(tk.INSERT, '# ')
+    #text_area.insert(tk.INSERT, '(', label_maker(), ')=' '# ')
+    #label = label_maker()
+    text_area.insert(tk.INSERT, f'({label_maker()})= \n# ')
     update_preview()
 
 
@@ -117,12 +130,14 @@ def add_equation():
     if start_idx and end_idx:
         selected_text = text_area.get(start_idx, end_idx)
         text_area.delete(start_idx, end_idx)
-        text_area.insert(start_idx, f"\n $${selected_text}$$ \n ")
+        label = f"(eq:{label_maker()})\n"
+        text_area.insert(start_idx, f"\n$$ {selected_text} $$ {label}")
         text_area.tag_remove(tk.SEL, "1.0", tk.END)
     else:
         cursor_idx = text_area.index(tk.INSERT)
         text_area.insert(cursor_idx, "\n$$")
-        text_area.insert(cursor_idx + "+3c", "$$\n")
+        label = f"$$ (eq:{label_maker()})\n"
+        text_area.insert(cursor_idx + "+3c", label)
         text_area.mark_set(tk.INSERT, cursor_idx + "+3c")
 
     update_preview()
@@ -190,6 +205,8 @@ def add_highlight():
 
     update_preview()
 
+# add reference
+# def add_reference():
 
 
 # ---------------------------- #
@@ -238,6 +255,8 @@ def main():
     try:
         app = tk.Tk()
         app.title("Markdown Previewer")
+
+#        app.bind('<Control-q>', quit_app())
 
         # Add a menubar
         menubar = tk.Menu(app)
