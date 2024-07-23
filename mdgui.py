@@ -32,21 +32,19 @@ def update_preview(event=None):
 
 # adding a chapter
 def add_chapter():
-    #text_area.insert(tk.INSERT, '(', label_maker(), ')=' '# ')
-    #label = label_maker()
-    text_area.insert(tk.INSERT, f'({label_maker()})= \n# ')
+    text_area.insert(tk.INSERT, f'(ch:{label_maker()})= \n# ')
     update_preview()
 
 
 # adding a section
 def add_section():
-    text_area.insert(tk.INSERT, '## ')
+    text_area.insert(tk.INSERT, f'(sec:{label_maker()})= \n## ')
     update_preview()
 
 
 # adding a subsection
 def add_subsection():
-    text_area.insert(tk.INSERT, '### ')
+    text_area.insert(tk.INSERT, f'(sec:{label_maker()})= \n### ')
     update_preview()
 
 
@@ -208,6 +206,31 @@ def add_highlight():
 # add reference
 # def add_reference():
 
+# add exercise
+def add_exercise():
+    exercise = simpledialog.askstring("Input", "Enter the exercise:")
+    label = label_maker()
+    if exercise:     
+        exercise_markdown = f"""
+```{{exercise}} 
+:label: ex-{label}
+{exercise}
+```
+"""
+    text_area.insert(tk.INSERT, exercise_markdown)
+    update_preview()
+
+    solution = simpledialog.askstring("Input", "Enter the solution:")
+    if solution:     
+        solution_markdown = f"""
+```{{solution}} ex-{label}
+:class: dropdown
+{solution}
+```
+"""
+    text_area.insert(tk.INSERT, solution_markdown)
+    update_preview()        
+
 
 # ---------------------------- #
 # Menu functions
@@ -318,7 +341,9 @@ def main():
         bold_button = tk.Button(button_frame, text="Admonition", command=add_admonition, width=button_width)
         bold_button.pack(pady=10)
 
-
+        bold_button = tk.Button(button_frame, text="Exercise", command=add_exercise, width=button_width)
+        bold_button.pack(pady=10)
+        
         # Text Area
 
         text_area = scrolledtext.ScrolledText(frame, wrap=tk.WORD, width=50)
