@@ -3,7 +3,7 @@
 
 
 import tkinter as tk
-from tkinter import scrolledtext, simpledialog, filedialog
+from tkinter import scrolledtext, simpledialog, filedialog, messagebox, Toplevel
 import markdown
 from tkhtmlview import HTMLLabel
 import random
@@ -12,6 +12,7 @@ import subprocess
 import threading
 import webbrowser
 import os
+
 
 # ---------------------------- #
 # quit the app
@@ -246,26 +247,43 @@ def run_command():
     """Run the jupyter-book build command and update the output_label with the result."""
     def execute_command():
         try:
-            update_dots()  # Start the dots animation
+            update_dots(popup, dots_label)  # Start the dots animation in the popup
             result = subprocess.run(['jupyter-book', 'build', 'book'], check=True, capture_output=True, text=True)
-            output_label.config(text="Commando succesvol uitgevoerd:\n") # + result.stdout)
-        
+            message_label.config(text="Commando succesvol uitgevoerd!")
+                
             # Na succesvolle uitvoering, open het HTML-bestand
             index_path = os.path.abspath("book/_build/html/index.html")
             if os.path.exists(index_path):
                 webbrowser.open_new_tab(index_path)
             else:
-                output_label.config(text="Build succesvol, maar index.html niet gevonden.")
+                message_label.config(text="Build succesvol, maar index.html niet gevonden.")
         except subprocess.CalledProcessError as e:
-            output_label.config(text="Fout bij uitvoeren van commando:\n" + e.stderr)
+            message_label.config(text=f"Fout bij uitvoeren van commando:\n{e.stderr}")
         finally:
             stop_dots()  # Stop the dots animation
+            popup.after(2000, popup.destroy)  # Sluit de popup na 2 seconden
+
+    # Maak een popup venster om de voortgang te tonen
+    popup = Toplevel()
+    popup.title("Building Book")
+    popup.geometry("300x150")
+
+    # Label om de bouwstatus weer te geven
+    message_label = tk.Label(popup, text="Boek wordt gebouwd...", wraplength=280)
+    message_label.pack(pady=10)
+
+    # Label voor de stippeltjes animatie
+    dots_label = tk.Label(popup, text="", wraplength=280, justify="center")
+    dots_label.pack(pady=10)
 
     # Run the command in a separate thread to avoid blocking the GUI
     threading.Thread(target=execute_command).start()
 
-def update_dots():
-    """Update the output label with an increasing number of dots every 3 seconds."""
+# Animation of dots
+dots_running = False
+
+def update_dots(popup, dots_label):
+    """Update the dots in the popup label with an increasing number of dots every 3 seconds."""
     global dots_running, dots_text
     dots_running = True
     dots_text = ""
@@ -276,8 +294,8 @@ def update_dots():
             dots_text += "." if len(dots_text) < 3 else ""
             if len(dots_text) == 3:
                 dots_text = ""
-            output_label.config(text=f"Building book{dots_text}")
-            output_label.after(3000, animate)
+            dots_label.config(text=f"Building book{dots_text}")
+            dots_label.after(1000, animate)  # Update elke seconde
 
     animate()
 
@@ -415,6 +433,8 @@ def main():
         # OUTPUT RUN
         output_label = tk.Label(frame, text="", wraplength=400, justify="left")
         output_label.pack(pady=10)
+
+
 
         app.mainloop()
     except Exception as e:
