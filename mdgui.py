@@ -8,6 +8,8 @@ import markdown
 from tkhtmlview import HTMLLabel
 import random
 import string
+import subprocess
+import threading
 
 # ---------------------------- #
 # quit the app
@@ -232,6 +234,49 @@ def add_exercise():
     update_preview()        
 
 
+# Global variable to control the animation
+dots_running = False
+dots_text = ""
+
+# Run the jupyter-book build command
+
+def run_command():
+    """Run the jupyter-book build command and update the output_label with the result."""
+    def execute_command():
+        try:
+            update_dots()  # Start the dots animation
+            result = subprocess.run(['jupyter-book', 'build', 'book'], check=True, capture_output=True, text=True)
+            output_label.config(text="Commando succesvol uitgevoerd:\n") # + result.stdout)
+        except subprocess.CalledProcessError as e:
+            output_label.config(text="Fout bij uitvoeren van commando:\n" + e.stderr)
+        finally:
+            stop_dots()  # Stop the dots animation
+
+    # Run the command in a separate thread to avoid blocking the GUI
+    threading.Thread(target=execute_command).start()
+
+def update_dots():
+    """Update the output label with an increasing number of dots every 3 seconds."""
+    global dots_running, dots_text
+    dots_running = True
+    dots_text = ""
+
+    def animate():
+        global dots_text
+        if dots_running:
+            dots_text += "." if len(dots_text) < 3 else ""
+            if len(dots_text) == 3:
+                dots_text = ""
+            output_label.config(text=f"Building book{dots_text}")
+            output_label.after(3000, animate)
+
+    animate()
+
+def stop_dots():
+    """Stop the dots animation."""
+    global dots_running
+    dots_running = False
+
 # ---------------------------- #
 # Menu functions
 def new_file():
@@ -273,7 +318,7 @@ def help():
 # main function
 
 def main():
-    global text_area, html_label
+    global text_area, html_label, output_label
     
     try:
         app = tk.Tk()
@@ -343,6 +388,9 @@ def main():
 
         bold_button = tk.Button(button_frame, text="Exercise", command=add_exercise, width=button_width)
         bold_button.pack(pady=10)
+
+        run_button = tk.Button(button_frame, text="Build TeachBook", command=run_command, width=button_width)
+        run_button.pack(pady=20)
         
         # Text Area
 
@@ -355,6 +403,10 @@ def main():
         html_label = HTMLLabel(frame, html="<p>This applet is made by <a href='http://teachbooks.tudelft.nl'>teachbooks</a></p>")
         html_label.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
+        # OUTPUT RUN
+        output_label = tk.Label(frame, text="", wraplength=400, justify="left")
+        output_label.pack(pady=10)
+
         app.mainloop()
     except Exception as e:
         print(f"Application Error: {e}")
@@ -364,3 +416,4 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print(f"Error in main: {e}")
+
