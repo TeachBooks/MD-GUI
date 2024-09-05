@@ -10,6 +10,8 @@ import random
 import string
 import subprocess
 import threading
+import webbrowser
+import os
 
 # ---------------------------- #
 # quit the app
@@ -247,6 +249,13 @@ def run_command():
             update_dots()  # Start the dots animation
             result = subprocess.run(['jupyter-book', 'build', 'book'], check=True, capture_output=True, text=True)
             output_label.config(text="Commando succesvol uitgevoerd:\n") # + result.stdout)
+        
+            # Na succesvolle uitvoering, open het HTML-bestand
+            index_path = os.path.abspath("book/_build/html/index.html")
+            if os.path.exists(index_path):
+                webbrowser.open_new_tab(index_path)
+            else:
+                output_label.config(text="Build succesvol, maar index.html niet gevonden.")
         except subprocess.CalledProcessError as e:
             output_label.config(text="Fout bij uitvoeren van commando:\n" + e.stderr)
         finally:
