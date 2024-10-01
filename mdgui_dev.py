@@ -28,30 +28,11 @@ def label_maker():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
 
 # update preview of markdown output
-counter = 0
 def update_preview(event=None):
-    global counter
     try:
         md_text = text_area.get("1.0", tk.END)
         html_text = markdown.markdown(md_text)
         html_label.set_html(html_text)
-        counter += 1
-        if counter % 5 == 0:
-            save_file()
-            run_command()
-    except Exception as e:
-        print(f"Error in update_preview: {e}")
-
-def update_preview_text_area(event=None):
-    global counter
-    try:
-        md_text = text_area.get("1.0", tk.END)
-        html_text = markdown.markdown(md_text)
-        html_label.set_html(html_text)
-        counter += 1
-        if counter % 500 == 0:
-            save_file()
-            run_command()
     except Exception as e:
         print(f"Error in update_preview: {e}")
 
@@ -279,8 +260,7 @@ def run_command():
             index_path = os.path.abspath(f"book/_build/html/{os.path.basename(file_base)}.html")
             print("book/_build/html/" + str(current_file) + ".html")
             if os.path.exists(index_path):
-                webbrowser.open(index_path, new=0)
-                #webbrowser.open_new_tab(index_path)
+                webbrowser.open_new_tab(index_path)
             else:
                 message_label.config(text="Build succesvol, maar index.html niet gevonden.")
         except subprocess.CalledProcessError as e:
@@ -466,7 +446,7 @@ def main():
 
         text_area = scrolledtext.ScrolledText(frame, wrap=tk.WORD, width=50)
         text_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        text_area.bind("<KeyRelease>", update_preview_text_area)
+        text_area.bind("<KeyRelease>", update_preview)
 
         # HTML Label
         
