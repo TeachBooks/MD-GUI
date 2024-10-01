@@ -1,7 +1,3 @@
-# pip install markdown 
-# pip install tkhtmlview
-
-
 import tkinter as tk
 from tkinter import scrolledtext, simpledialog, filedialog, messagebox, Toplevel
 import markdown
@@ -13,21 +9,23 @@ import threading
 import webbrowser
 import os
 
+# ---------------------------- #
+# A Graphical User Interface with Markdown Previewer and HTML previewer
+# made to make it easier to build Jupyter Books, using Teachbooks.
+# Code consists of:
+# - Markdown previewer
+# - HTML previewer
+# - Buttons to add markdown elements
+# - Button to build the book
+# - Menu with options to open, save, exit, help and about
+# - Main menu
+# ---------------------------- #
+
 
 # ---------------------------- #
-# quit the app
-#def quit_app(event=None):
-#    app.quit()
-
-
-
-# Labelmaker
-# Generate a random label of 4 uppercase letters
-
-def label_maker():
-    return ''.join(random.choices(string.ascii_uppercase, k=4))
-
 # update preview of markdown output
+# The opened document saves after 5 new elements or every 500 characters
+
 counter = 0
 def update_preview(event=None):
     global counter
@@ -56,6 +54,72 @@ def update_preview_text_area(event=None):
         print(f"Error in update_preview: {e}")
 
 # ---------------------------- #
+
+
+# ---------------------------- #
+# This is the menu bar with the options to create a new file
+# open a file, save a file, save a file as, exit the application
+# and show the about and help information
+
+def new_file():
+    text_area.delete("1.0", tk.END)
+    update_preview()
+
+current_file = None
+def open_file():
+    global current_file
+    filename = tk.filedialog.askopenfilename()
+    if filename:
+        current_file = filename
+        with open(filename, "r") as file:
+            text_area.delete("1.0", tk.END)
+            text_area.insert(tk.INSERT, file.read())
+            update_preview()
+            run_command()
+
+def save_file():
+    global current_file
+    if current_file:
+        with open(current_file, "w") as file:
+            file.write(text_area.get("1.0", tk.END))
+    else:
+        save_file_as()
+
+def save_file_as():
+    filename = tk.filedialog.asksaveasfilename()
+    if filename:
+        with open(filename, "w") as file:
+            file.write(text_area.get("1.0", tk.END))
+
+def about():
+    about_text = """
+This is a simple markdown previewer applet, allowing you to write markdown text and preview it in real-time. Not all markdown features are supported (like showing the figure), but the most common ones are.
+
+Made by Freek Pols, Teachbooks
+https://github.com/TeachBooks/MD-GUI
+Version 1.0
+CC-BY-NC
+    """
+    tk.messagebox.showinfo("About", about_text)
+
+def help():
+    help_text = """
+    See this, yet non-existing, youtube video for a quick tutorial on how to use this applet.
+    """
+    tk.messagebox.showinfo("Help", help_text)
+# ---------------------------- #
+
+
+# ---------------------------- #
+# Each of the markdown elements gets, if possible, a label
+# We included most common JB elements
+
+# Generate a random label of 4 uppercase letters
+def label_maker():
+    return ''.join(random.choices(string.ascii_uppercase, k=4))
+
+def check_selected():
+    
 # added functionalities
 
 # adding a chapter
@@ -63,12 +127,10 @@ def add_chapter():
     text_area.insert(tk.INSERT, f'(ch:{label_maker()})= \n# ')
     update_preview()
 
-
 # adding a section
 def add_section():
     text_area.insert(tk.INSERT, f'(sec:{label_maker()})= \n## ')
     update_preview()
-
 
 # adding a subsection
 def add_subsection():
@@ -76,29 +138,9 @@ def add_subsection():
     update_preview()
 
 
-# adding a figure
-def add_figure():
-    figure_name = simpledialog.askstring("Input", "Enter the name of the file:")
-    if figure_name:
-        width = simpledialog.askstring("Input", "Enter the width percentage:")
-        alignment = simpledialog.askstring("Input", "Enter the alignment (left, center, right):")
-        caption = simpledialog.askstring("Input", "Enter the caption:")
-        fig_label = simpledialog.askstring("Input", "Enter the labelname:")
-        
-        figure_markdown = f"""
-```{{figure}} {figure_name}
----
-width: {width}%
-alignment: {alignment}
-name: {fig_label}
----
-{caption}
-```"""
-    text_area.insert(tk.INSERT, figure_markdown)
-    update_preview()
-
-
 # including bold text
+
+
 def add_bold():
     try:
         start_idx = text_area.index(tk.SEL_FIRST)
@@ -119,6 +161,31 @@ def add_bold():
         text_area.mark_set(tk.INSERT, cursor_idx + "+2c")
 
     update_preview()
+
+# adding a figure
+def add_figure():
+    #figure_name = Toplevel()
+    figure_name = simpledialog.askstring("Input", "Enter the name of the file:")
+    if figure_name:
+        width = simpledialog.askstring("Input", "Enter the width percentage:")
+        alignment = simpledialog.askstring("Input", "Enter the alignment (left, center, right):")
+        caption = simpledialog.askstring("Input", "Enter the caption:")
+        fig_label = simpledialog.askstring("Input", "Enter the labelname:")
+        
+        figure_markdown = f"""
+```{{figure}} {figure_name}
+---
+width: {width}%
+alignment: {alignment}
+name: {fig_label}
+---
+{caption}
+```"""
+    text_area.insert(tk.INSERT, figure_markdown)
+    update_preview()
+
+
+
 
 
 # including italics
@@ -260,13 +327,13 @@ def add_exercise():
     update_preview()        
 
 
+# ---------------------------- #
 # Global variable to control the animation
 dots_running = False
 dots_text = ""
 
 # Run the jupyter-book build command
-
-def run_command():
+def run_command_1():
     """Run the jupyter-book build command and update the output_label with the result."""
     def execute_command():
         try:
@@ -274,20 +341,18 @@ def run_command():
             result = subprocess.run(['jupyter-book', 'build', 'book'], check=True, capture_output=True, text=True)
             message_label.config(text="Commando succesvol uitgevoerd!")
                 
-            # Na succesvolle uitvoering, open het HTML-bestand
-            file_base, _ = os.path.splitext(current_file)  # Split de naam en extensie, gebruik _ om de extensie te negeren
-            index_path = os.path.abspath(f"book/_build/html/{os.path.basename(file_base)}.html")
-            print("book/_build/html/" + str(current_file) + ".html")
+            # After successful execution, open the HTML file
+            index_path = os.path.abspath(f"book/_build/html/index.html")
+            
             if os.path.exists(index_path):
-                webbrowser.open(index_path, new=0)
-                #webbrowser.open_new_tab(index_path)
+                webbrowser.open(index_path, new=0)                
             else:
                 message_label.config(text="Build succesvol, maar index.html niet gevonden.")
         except subprocess.CalledProcessError as e:
             message_label.config(text=f"Fout bij uitvoeren van commando:\n{e.stderr}")
         finally:
             stop_dots()  # Stop the dots animation
-            popup.after(2000, popup.destroy)  # Sluit de popup na 2 seconden
+            popup.after(2000, popup.destroy)  # Close the popup after 2 seconds
 
     # Maak een popup venster om de voortgang te tonen
     popup = Toplevel()
@@ -302,6 +367,26 @@ def run_command():
     dots_label = tk.Label(popup, text="", wraplength=280, justify="center")
     dots_label.pack(pady=10)
 
+    # Run the command in a separate thread to avoid blocking the GUI
+    threading.Thread(target=execute_command).start()
+
+def run_command():
+    """Run the jupyter-book build command and update the output_label with the result."""
+    def execute_command():
+        try:
+            result = subprocess.run(['jupyter-book', 'build', 'book'], check=True, capture_output=True, text=True)
+                
+            # Na succesvolle uitvoering, open het HTML-bestand
+            file_base, _ = os.path.splitext(current_file)  # Split de naam en extensie, gebruik _ om de extensie te negeren
+            index_path = os.path.abspath(f"book/_build/html/{os.path.basename(file_base)}.html")
+
+            if os.path.exists(index_path):
+                webbrowser.open(index_path, new=0)                
+            else:
+                message_label.config(text="Build successful, but page not found.")
+        except subprocess.CalledProcessError as e:
+            message_label.config(text=f"Error running the command:\n{e.stderr}")
+        
     # Run the command in a separate thread to avoid blocking the GUI
     threading.Thread(target=execute_command).start()
 
@@ -333,56 +418,6 @@ def stop_dots():
 # ---------------------------- #
 
 
-
-# Menu functions
-def new_file():
-    text_area.delete("1.0", tk.END)
-    update_preview()
-
-current_file = None
-def open_file():
-    global current_file
-    filename = tk.filedialog.askopenfilename()
-    if filename:
-        current_file = filename
-        with open(filename, "r") as file:
-            text_area.delete("1.0", tk.END)
-            text_area.insert(tk.INSERT, file.read())
-            update_preview()
-
-def save_file():
-    global current_file
-    if current_file:
-        with open(current_file, "w") as file:
-            file.write(text_area.get("1.0", tk.END))
-    else:
-        save_file_as()
-
-def save_file_as():
-    filename = tk.filedialog.asksaveasfilename()
-    if filename:
-        with open(filename, "w") as file:
-            file.write(text_area.get("1.0", tk.END))
-
-
-
-def about():
-    about_text = """
-This is a simple markdown previewer applet, allowing you to write markdown text and preview it in real-time. Not all markdown features are supported (like showing the figure), but the most common ones are.
-
-Made by Freek Pols, Teachbooks
-https://github.com/TeachBooks/MD-GUI
-Version 1.0
-CC-BY-NC
-    """
-    tk.messagebox.showinfo("About", about_text)
-
-def help():
-    help_text = """
-    See this, yet non-existing, youtube video for a quick tutorial on how to use this applet.
-    """
-    tk.messagebox.showinfo("Help", help_text)
-
 # ---------------------------- #
 # main function
 
@@ -392,8 +427,6 @@ def main():
     try:
         app = tk.Tk()
         app.title("Markdown Previewer")
-
-#        app.bind('<Control-q>', quit_app())
 
         # Add a menubar
         menubar = tk.Menu(app)
@@ -426,7 +459,7 @@ def main():
         button_font = ('sans', 12)
 
         # Buttons
-        chapter_button = tk.Button(button_frame, text="Chapter", font=('sans', 10), command=add_chapter, width=button_width,  )
+        chapter_button = tk.Button(button_frame, text="Chapter", font=('sans', 10), command=add_chapter, width=button_width)
         chapter_button.pack(pady=10)
 
         section_button = tk.Button(button_frame, text="Section", font=('sans', 10), command=add_section, width=button_width)
@@ -438,28 +471,28 @@ def main():
         bold_button = tk.Button(button_frame, text="Bold", font=('sans', 10, 'bold'), command=add_bold, width=button_width)
         bold_button.pack(pady=10)
         
-        bold_button = tk.Button(button_frame, text="Italic", font=('sans', 10, 'italic'), command=add_italics, width=button_width)
-        bold_button.pack(pady=10)
+        italic_button = tk.Button(button_frame, text="Italic", font=('sans', 10, 'italic'), command=add_italics, width=button_width)
+        italic_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Highlight", font=('sans', 10), command=add_highlight, width=button_width)
-        bold_button.pack(pady=10)
+        highlight_button = tk.Button(button_frame, text="Highlight", font=('sans', 10), command=add_highlight, width=button_width)
+        highlight_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Equation", font=('sans', 10), command=add_equation, width=button_width)
-        bold_button.pack(pady=10)
+        eq_button = tk.Button(button_frame, text="Equation", font=('sans', 10), command=add_equation, width=button_width)
+        eq_button.pack(pady=10)
 
         figure_button = tk.Button(button_frame, text="Figure", font=('sans', 10), command=add_figure, width=button_width)
         figure_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="YTvideo", font=('sans', 10), command=add_youtube, width=button_width)
-        bold_button.pack(pady=10)
+        YT_button = tk.Button(button_frame, text="YTvideo", font=('sans', 10), command=add_youtube, width=button_width)
+        YT_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Admonition", font=('sans', 10), command=add_admonition, width=button_width)
-        bold_button.pack(pady=10)
+        adm_button = tk.Button(button_frame, text="Admonition", font=('sans', 10), command=add_admonition, width=button_width)
+        adm_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Exercise", font=('sans', 10), command=add_exercise, width=button_width)
-        bold_button.pack(pady=10)
+        exc_button = tk.Button(button_frame, text="Exercise", font=('sans', 10), command=add_exercise, width=button_width)
+        exc_button.pack(pady=10)
 
-        run_button = tk.Button(button_frame, text="Build TeachBook", font=('sans', 10), command=run_command, width=button_width)
+        run_button = tk.Button(button_frame, text="Build TeachBook", font=('sans', 10), command=run_command_1, width=button_width)
         run_button.pack(pady=20)
         
         # Text Area
