@@ -19,7 +19,11 @@ import os
 #def quit_app(event=None):
 #    app.quit()
 
-# labelmaker
+
+
+# Labelmaker
+# Generate a random label of 4 uppercase letters
+
 def label_maker():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
 
@@ -252,7 +256,9 @@ def run_command():
             message_label.config(text="Commando succesvol uitgevoerd!")
                 
             # Na succesvolle uitvoering, open het HTML-bestand
-            index_path = os.path.abspath("book/_build/html/index.html")
+            file_base, _ = os.path.splitext(current_file)  # Split de naam en extensie, gebruik _ om de extensie te negeren
+            index_path = os.path.abspath(f"book/_build/html/{os.path.basename(file_base)}.html")
+            print("book/_build/html/" + str(current_file) + ".html")
             if os.path.exists(index_path):
                 webbrowser.open_new_tab(index_path)
             else:
@@ -305,24 +311,40 @@ def stop_dots():
     dots_running = False
 
 # ---------------------------- #
+
+
+
 # Menu functions
 def new_file():
     text_area.delete("1.0", tk.END)
     update_preview()
 
+current_file = None
 def open_file():
+    global current_file
     filename = tk.filedialog.askopenfilename()
     if filename:
+        current_file = filename
         with open(filename, "r") as file:
             text_area.delete("1.0", tk.END)
             text_area.insert(tk.INSERT, file.read())
             update_preview()
 
 def save_file():
+    global current_file
+    if current_file:
+        with open(current_file, "w") as file:
+            file.write(text_area.get("1.0", tk.END))
+    else:
+        save_file_as()
+
+def save_file_as():
     filename = tk.filedialog.asksaveasfilename()
     if filename:
         with open(filename, "w") as file:
             file.write(text_area.get("1.0", tk.END))
+
+
 
 def about():
     about_text = """
@@ -381,42 +403,43 @@ def main():
         button_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         button_width = 20
+        button_font = ('sans', 12)
 
         # Buttons
-        chapter_button = tk.Button(button_frame, text="Chapter", command=add_chapter, width=button_width)
+        chapter_button = tk.Button(button_frame, text="Chapter", font=('sans', 10), command=add_chapter, width=button_width,  )
         chapter_button.pack(pady=10)
 
-        section_button = tk.Button(button_frame, text="Section", command=add_section, width=button_width)
+        section_button = tk.Button(button_frame, text="Section", font=('sans', 10), command=add_section, width=button_width)
         section_button.pack(pady=10)
 
-        subsection_button = tk.Button(button_frame, text="Subsection", command=add_subsection, width=button_width)
+        subsection_button = tk.Button(button_frame, text="Subsection", font=('sans', 10), command=add_subsection, width=button_width)
         subsection_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Bold", command=add_bold, width=button_width)
+        bold_button = tk.Button(button_frame, text="Bold", font=('sans', 10, 'bold'), command=add_bold, width=button_width)
         bold_button.pack(pady=10)
         
-        bold_button = tk.Button(button_frame, text="Italics", command=add_italics, width=button_width)
+        bold_button = tk.Button(button_frame, text="Italic", font=('sans', 10, 'italic'), command=add_italics, width=button_width)
         bold_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Highlight", command=add_highlight, width=button_width)
+        bold_button = tk.Button(button_frame, text="Highlight", font=('sans', 10), command=add_highlight, width=button_width)
         bold_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Equation", command=add_equation, width=button_width)
+        bold_button = tk.Button(button_frame, text="Equation", font=('sans', 10), command=add_equation, width=button_width)
         bold_button.pack(pady=10)
 
-        figure_button = tk.Button(button_frame, text="Figure", command=add_figure, width=button_width)
+        figure_button = tk.Button(button_frame, text="Figure", font=('sans', 10), command=add_figure, width=button_width)
         figure_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="YTvideo", command=add_youtube, width=button_width)
+        bold_button = tk.Button(button_frame, text="YTvideo", font=('sans', 10), command=add_youtube, width=button_width)
         bold_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Admonition", command=add_admonition, width=button_width)
+        bold_button = tk.Button(button_frame, text="Admonition", font=('sans', 10), command=add_admonition, width=button_width)
         bold_button.pack(pady=10)
 
-        bold_button = tk.Button(button_frame, text="Exercise", command=add_exercise, width=button_width)
+        bold_button = tk.Button(button_frame, text="Exercise", font=('sans', 10), command=add_exercise, width=button_width)
         bold_button.pack(pady=10)
 
-        run_button = tk.Button(button_frame, text="Build TeachBook", command=run_command, width=button_width)
+        run_button = tk.Button(button_frame, text="Build TeachBook", font=('sans', 10), command=run_command, width=button_width)
         run_button.pack(pady=20)
         
         # Text Area
